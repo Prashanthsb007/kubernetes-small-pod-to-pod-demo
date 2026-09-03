@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+  labels:
+    app: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: curlimages/curl:8.10.1
+        env:
+        - name: BACKEND_URL
+          # This is the DNS name of the backend Service, mentioned right here
+          # in the manifest. Kubernetes' internal DNS resolves this name to
+          # the backend Service's ClusterIP automatically.
+          #
+          # Short form (works when both pods are in the same namespace):
+          #   http://backend-service
+          #
+          # Full form (works from any namespace):
+          #   http://<service-name>.<namespace>.svc.cluster.local
+          value: "http://backend-service.default.svc.cluster.local"
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            while true; do
+              echo "Calling backend at: $BACKEND_URL"
+              curl -s $BACKEND_URL
+              echo "------------------------------------"
+              sleep 5
+            done
